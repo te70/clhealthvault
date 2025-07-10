@@ -10,7 +10,7 @@ records_bp = Blueprint('records', __name__)
 @login_required
 @role_required('admin', 'doctor')
 def create_note():
-    data = request.json
+    data = request.form
     note = Note(
         patient_id=data['patient_id'],
         content=encrypt_data(data['content']),
@@ -18,7 +18,7 @@ def create_note():
     )
     db.session.add(note)
     db.session.commit()
-    return jsonify({"message": "Note created"}), 201
+    return redirect('/dashboard')
 
 @records_bp.route('/notes', methods=['GET'])
 @login_required
@@ -36,25 +36,27 @@ def get_notes():
         })
     return jsonify(visible)
 
-@records_bp.route('/notes/<int:id>', methods=['PUT'])
+#update a note (admin, doctor)
+@records_bp.route('/notes/<int:id>/update', methods=['POST'])
 @login_required
 @role_required('admin', 'doctor')
 def update_note(id):
     note = Note.query.get_or_404(id)
-    data = request.json
+    data = request.form
     note.content = encrypt_data(data['content'])
-    note.is_sensitive = data.get('is_sensitive', note.is_sensitive)
+    note.is_sensitive = 'is_sensitive' in request.form
     db.session.commit()
-    return jsonify({"message": "Note updated"})
+    return redirect('/dashboard')
 
-@records_bp.route('/notes/<int:id>', methods=['DELETE'])
+#delete a note (admin)
+@records_bp.route('/notes/<int:id>/delete', methods=['POST'])
 @login_required
 @role_required('admin')
 def delete_note(id):
     note = Note.query.get_or_404(id)
     db.session.delete(note)
     db.session.commit()
-    return jsonify({"message": "Note deleted"})
+    return redirect('/dashboard')
 
 #pharmacist: read-only prescriptions
 @records_bp.route('/prescriptions', methods=['GET'])
@@ -87,16 +89,16 @@ def create_prescription():
     return jsonify({"message": "Prescription created"}), 201
 
 #update a prescription (admin, doctor)
-@records_bp.route('/prescriptions/<int:id>', methods=['PUT'])
+@records_bp.route('/prescriptions/<int:id>/update', methods=['POST'])
 @login_required
 @role_required('admin', 'doctor')
 def update_prescription(id):
     prescription = Prescription.query.get_or_404(id)
-    data = request.json
+    data = request.form
     prescription.drug_name = data.get('drug_name', prescription.drug_name)
     prescription.dosage = data.get('dosage', prescription.dosage)
     db.session.commit()
-    return jsonify({"message": "Prescription updated"})
+    return redirect('/dashboard')
 
 #delte a prescription (admin only)
 @records_bp.route('/prescriptions/<int:id>', methods=['DELETE'])
@@ -133,3 +135,30 @@ def delete_prescription_form(id):
     db.session.delete(prescription)
     db.session.commit()
     return redirect(url_for('records.manage_prescriptions'))
+
+@records_bp.route('/patients/<int:id>/update', methods=['POST'])
+@login_required
+@role_required('admin', 'doctor')
+def update_patient(id):
+    patient = Patient.query.get_or_404(id)
+    new_name = request.form['name'].strip()
+
+    if new_name:
+        patient.name = new_name
+        db.session.commit()
+    
+    return redirect(url_for('dashboard.dashboard'))
+
+@records_bp.route('/patients/<int:id>/delete', methods=['POST'])
+@login_required
+@role_required('admin')
+def delete_patient(id):
+    patient = Patient.query.get_or_404(id)
+
+    Note.query.filter_by(patient_id=patient.id).delete()
+    Prescription.query.filter_by(patient_id=patient.id).delete()
+
+    db.session.delete(patient)
+    db.session.commit()
+    return redirect(url_for('dashboard.dashboard'))
+

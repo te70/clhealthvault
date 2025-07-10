@@ -56,39 +56,16 @@ def register():
         return render_template("register.html", otp_uri=otp_uri, otp_qr=qr_b64, otp_secret=otp_secret)
     return render_template("register.html", otp_uri=None, otp_qr=None, otp_secret=None)
 
-
-@app.route('/dashboard')
+@app.route('/logout', methods=['POST'])
 @login_required
-def dashboard():
-    return render_template('dashboard.html')
-
-# @app.route('/add_note', methods=['POST'])
-# @login_required
-# @role_required('doctor')
-# def add_note():
-#     content = request.form['content']
-#     is_sensitive = 'sensitive' in request.form
-#     encrypted = encrypt_data(content)
-#     note = Note(patient_id=1, content=encrypted, is_sensitive=is_sensitive)
-#     db.session.add(note)
-#     db.session.commit()
-#     return redirect('/dashboard')
-
-# @app.route('/view_notes')
-# @login_required
-# @role_required('doctor', 'nurse')
-# def view_notes():
-#     notes = Note.query.all()
-#     visible_notes = []
-#     for note in notes:
-#         if note.is_sensitive and current_user.role != 'doctor':
-#             continue
-#         visible_notes.append(decrypt_data(note.content))
-#     return "<br>".join(visible_notes)
+def logout():
+    logout_user()
+    flash("You have been logged out.", "info")
+    return render_template("home.html")
 
 register_blueprints(app)
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(port=8000) #for testing https
+    app.run(port=7000) 
