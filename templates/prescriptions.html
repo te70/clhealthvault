@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Prescriptions | Health Vault</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h2 class="mb-4">Manage Prescriptions</h2>
+
+    <!-- Add Prescription Form -->
+    <form method="POST" action="/prescriptions" class="mb-4">
+        <div class="mb-3">
+            <label for="patient_id" class="form-label">Patient ID</label>
+            <input type="number" name="patient_id" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="drug_name" class="form-label">Drug Name</label>
+            <input type="text" name="drug_name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="dosage" class="form-label">Dosage</label>
+            <input type="text" name="dosage" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-success">Add Prescription</button>
+    </form>
+
+    <!-- List of Prescriptions -->
+    <h4>Existing Prescriptions</h4>
+    <ul class="list-group">
+        {% for p in prescriptions %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ p.drug_name }} ({{ p.dosage }}) — Patient #{{ p.patient_id }}
+                {% if can_edit %}
+                <form method="POST" action="/prescriptions/{{ p.id }}/delete" style="margin: 0;">
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                </form>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <a href="/dashboard" class="btn btn-secondary mt-4">Back to Dashboard</a>
+</div>
+</body>
+</html>

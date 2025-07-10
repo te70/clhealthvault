@@ -26,3 +26,9 @@ class Note(db.Model):
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'))
     content = db.Column(db.LargeBinary)
     is_sensitive = db.Column(db.Boolean)
+
+class Prescription(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'))
+    drug_name = db.Column(db.String(100))
+    dosage = db.Column(db.String(100))
